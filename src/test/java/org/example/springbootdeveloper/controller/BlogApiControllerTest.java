@@ -18,9 +18,8 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.util.List;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -115,5 +114,26 @@ class BlogApiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value(title))
                 .andExpect(jsonPath("$.content").value(content));
+    }
+
+    @DisplayName(("deleteArticle : 블로그 글 삭제에 성공한다."))
+    @Test
+    public void deleteArticle() throws Exception {
+        //given : 블로그 글을 저정한다.
+        final String url = "/api/articles/{id}";
+        final String title = "title";
+        final String content = "content";
+
+        Article savedArticle = blogRepository.save(Article.builder()
+                .title(title)
+                .content(content)
+                .build());
+
+        //when : 저장한 글의 id 값으로 삭제 api를 호출한다.
+        mockMvc.perform(delete(url, savedArticle.getId())).andExpect(status().isOk());
+
+        //then : 응답코드가 200, 블로그 글 리스트 전체를 조회해 조회한 배열 크기가 0인지 확인
+        List<Article> articles = blogRepository.findAll();
+        assertThat(articles).isEmpty();
     }
 }
