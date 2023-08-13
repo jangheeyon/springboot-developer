@@ -3,6 +3,7 @@ package org.example.springbootdeveloper.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.springbootdeveloper.domain.Article;
 import org.example.springbootdeveloper.dto.AddArticleRequest;
+import org.example.springbootdeveloper.dto.UpdateArticleRequest;
 import org.example.springbootdeveloper.repository.BlogRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -136,4 +137,39 @@ class BlogApiControllerTest {
         List<Article> articles = blogRepository.findAll();
         assertThat(articles).isEmpty();
     }
+
+    @DisplayName("updateArticle : 블로그 글 수정에 성공한다.")
+    @Test
+    public void updateArticle() throws Exception {
+        //given : 블로그 글을 저장하고 수정에 필요한 요청 객체를 만든다.
+        final String url = "/api/articles/{id}";
+        final String title = "title";
+        final String content = "content";
+
+        Article savedArticle = blogRepository.save(Article.builder()
+                .title(title)
+                .content(content)
+                .build());
+
+        final String newTitle = "new title";
+        final String newContent = "new cotent";
+
+        UpdateArticleRequest request = new UpdateArticleRequest(newTitle, newContent);
+
+        //when : update api로 수정 요청을 보낸다. 요청 타입은 json. given에서 만든 객체를 요청 본문으로 함께 보냄
+        ResultActions result = mockMvc.perform(put(url, savedArticle.getId())
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(objectMapper.writeValueAsString(request)));
+
+
+        //then : 응답코드가 200인지, 블로그 글 id로 조회한 후 값이 수정됐는지 확인
+        result.andExpect(status().isOk());
+
+        Article article = blogRepository.findById(savedArticle.getId()).get();
+
+        assertThat(article.getTitle()).isEqualTo(newTitle);
+        assertThat(article.getContent()).isEqualTo(newContent);
+    }
+
+
 }
